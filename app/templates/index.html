@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Program Generator, Debugger & Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-lg flex-shrink-0">
+        <div class="p-6 border-b border-slate-700">
+            <h1 class="text-xl font-bold tracking-tight">AI Code Assistant</h1>
+            <p class="text-xs text-slate-400 mt-1">Generator · Debugger · Optimizer</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <button data-action="generate" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 transition text-left">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span>Generate Code</span>
+            </button>
+            <button data-action="explain" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition text-left">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                <span>Explain Code</span>
+            </button>
+            <button data-action="debug" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition text-left">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Debug Code</span>
+            </button>
+            <button data-action="optimize" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition text-left">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <span>Optimize Code</span>
+            </button>
+        </nav>
+        <div class="p-4 border-t border-slate-700 text-xs text-slate-500">
+            <p>Final Year CSE Project</p>
+            <p>Powered by Groq AI</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0">
+        <!-- Top Bar -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+            <div>
+                <h2 id="module-title" class="text-lg font-semibold text-slate-900">Generate Code</h2>
+                <p id="module-desc" class="text-sm text-slate-500">Describe what you need, pick a language, and generate clean code.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <label for="language" class="text-sm font-medium text-slate-600">Language</label>
+                <select id="language" class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3 py-2">
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <option value="c">C</option>
+                    <option value="cpp">C++</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="sql">SQL</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- Workspace -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Input Area -->
+            <section class="flex-1 flex flex-col border-b border-slate-200 min-h-0">
+                <div class="px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+                    <label id="input-label" for="prompt-input" class="text-sm font-semibold text-slate-700">Requirement</label>
+                    <div class="flex items-center gap-2">
+                        <button id="clear-btn" class="text-sm px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-md transition">Clear</button>
+                        <button id="copy-btn" class="text-sm px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-md transition">Copy Code</button>
+                    </div>
+                </div>
+                <div class="flex-1 relative min-h-0">
+                    <textarea id="prompt-input" class="absolute inset-0 w-full h-full p-4 resize-none border-none outline-none text-sm font-mono bg-white text-slate-700" placeholder="Enter your requirement or paste code here..."></textarea>
+                </div>
+            </section>
+
+            <!-- Editor Area -->
+            <section class="flex-1 flex flex-col min-h-0">
+                <div class="px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+                    <label class="text-sm font-semibold text-slate-700">Code Editor</label>
+                    <div class="flex items-center gap-2">
+                        <button id="action-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2">
+                            <span id="action-text">Generate</span>
+                            <svg id="action-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="editor" class="flex-1 min-h-0"></div>
+            </section>
+
+            <!-- Output Panel -->
+            <section class="h-64 flex flex-col bg-white border-t border-slate-200 flex-shrink-0">
+                <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+                    <label class="text-sm font-semibold text-slate-700">Output</label>
+                    <div id="loading" class="hidden items-center gap-2 text-sm text-blue-600">
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>Processing with AI...</span>
+                    </div>
+                </div>
+                <div id="output-panel" class="flex-1 overflow-auto p-4 text-sm text-slate-700 whitespace-pre-wrap font-mono leading-relaxed"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <script src="{{ url_for('static', path='/js/app.js') }}"></script>
+</body>
+</html>
